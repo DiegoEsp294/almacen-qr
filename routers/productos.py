@@ -44,6 +44,7 @@ async def obtener_producto(producto_id: int):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def crear_producto(producto: Producto):
+    print("Producto recibido:", producto.model_dump())
     query = productos.insert().values(
         codigo=producto.codigo,
         nombre=producto.nombre,

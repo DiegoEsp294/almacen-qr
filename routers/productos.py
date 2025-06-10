@@ -1,19 +1,21 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from database import database, productos
 
 router = APIRouter()
 
-class Producto(BaseModel):
-    id: int
+class ProductoBase(BaseModel):
     codigo: str
     nombre: str
     stock: int
     ubicacion: str
-    creado_en: str
     precio: float
     costo: float
+
+class Producto(ProductoBase):
+    id: int
+    creado_en: str
 
 def convertir_producto(fila) -> dict:
     return {
@@ -42,8 +44,8 @@ async def obtener_producto(producto_id: int):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return convertir_producto(fila)
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-async def crear_producto(producto: Producto):
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=Producto)
+async def crear_producto(producto: ProductoBase):
     print("Producto recibido:", producto.model_dump())
     query = productos.insert().values(
         codigo=producto.codigo,
@@ -54,4 +56,8 @@ async def crear_producto(producto: Producto):
         costo=producto.costo,
     )
     nuevo_id = await database.execute(query)
-    return { "id": nuevo_id, **producto.model_dump() }
+
+    query_select = productos.select().where(productos.c.id == nuevo_id)
+    fila = await database.fetch_one(query_select)
+
+    return convertir_producto(fila)

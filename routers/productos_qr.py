@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from typing import List
 from pydantic import BaseModel
 from database import database, productos_qr, productos
@@ -7,6 +7,10 @@ router = APIRouter()
 
 class ProductoQR(BaseModel):
     id: int
+    producto_id: int
+    codigo_qr: str
+
+class ProductoQRCreate(BaseModel):
     producto_id: int
     codigo_qr: str
 
@@ -30,3 +34,12 @@ async def obtener_producto_por_qr(codigo_qr: str):
     if not fila:
         raise HTTPException(status_code=404, detail="QR no encontrado")
     return convertir_producto_qr(fila)
+
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def crear_producto_qr(producto_qr: ProductoQRCreate):
+    query = productos_qr.insert().values(
+        producto_id=producto_qr.producto_id,
+        codigo_qr=producto_qr.codigo_qr
+    )
+    last_record_id = await database.execute(query)
+    return { "id": last_record_id, **producto_qr.model_dump() }

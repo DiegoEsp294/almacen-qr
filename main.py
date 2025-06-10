@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware  # 👈 Agregá esto
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 
 from database import database, metadata, DATABASE_URL
@@ -11,15 +11,15 @@ app = FastAPI()
 
 # ⚠️ Configuración de CORS
 origins = [
-    "http://localhost:3000",                    # Si trabajás local
+    "http://localhost:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "https://almacen-qr.onrender.com",          # Tu dominio Flutter Web
+    "https://almacen-qr.onrender.com",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,          # Podés usar ["*"] para todos los orígenes (no recomendado en prod)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

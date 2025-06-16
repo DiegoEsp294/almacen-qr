@@ -29,7 +29,7 @@ async def listar_productos_qr():
 
 @router.get("/{codigo_qr}", response_model=ProductoQR)
 async def obtener_producto_por_qr(codigo_qr: str):
-    query = productos_qr.select().where(productos_qr.c.codigo_qr == codigo_qr)
+    query = productos_qr.select().where(productos_qr.c.codigo == codigo_qr)
     fila = await database.fetch_one(query)
     if not fila:
         raise HTTPException(status_code=404, detail="QR no encontrado")

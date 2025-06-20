@@ -1,7 +1,8 @@
 from databases import Database
 from sqlalchemy import Table, Column, Integer, String, Numeric, TIMESTAMP, MetaData, ForeignKey
 
-DATABASE_URL = "mysql+pymysql://u8gximg2k687xdpf:pukQ0xklwhjYhnvJ7Xxs@bcfuu79zp2osr4p2mltu-mysql.services.clever-cloud.com:3306/bcfuu79zp2osr4p2mltu"
+# DATABASE_URL = "mysql+pymysql://u8gximg2k687xdpf:pukQ0xklwhjYhnvJ7Xxs@bcfuu79zp2osr4p2mltu-mysql.services.clever-cloud.com:3306/bcfuu79zp2osr4p2mltu"
+DATABASE_URL = "mysql+pymysql://root:QbgsKxjQXXJKHRwmQSojLjnCBZCVFhyK@yamanote.proxy.rlwy.net:48930/railway"
 
 database = Database(DATABASE_URL)
 metadata = MetaData()

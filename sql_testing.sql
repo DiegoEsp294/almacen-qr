@@ -96,6 +96,33 @@ CREATE TABLE IF NOT EXISTS `ventas_detalle` (
 
 -- La exportación de datos fue deseleccionada.
 
+-- Volcando estructura para tabla qr_db.usuarios
+CREATE TABLE `usuarios` (
+	`id_usuarios` INT(10) NOT NULL AUTO_INCREMENT,
+	`nombre` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`apellido` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	`email` VARCHAR(150) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	PRIMARY KEY (`id_usuarios`) USING BTREE,
+	UNIQUE INDEX `email` (`email`) USING BTREE
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;
+-- La exportación de datos fue deseleccionada.
+
+-- Volcando estructura para tabla qr_db.roles
+CREATE TABLE `roles` (
+	`id_roles` INT(10) NOT NULL AUTO_INCREMENT,
+	`nombre` VARCHAR(100) NOT NULL COLLATE 'utf8mb4_0900_ai_ci',
+	PRIMARY KEY (`id_roles`) USING BTREE,
+	UNIQUE INDEX `nombre` (`nombre`) USING BTREE
+)
+COLLATE='utf8mb4_0900_ai_ci'
+ENGINE=InnoDB
+;
+-- La exportación de datos fue deseleccionada.
+
+
 -- Volcando estructura para disparador qr_db.trg_productos_delete
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION';
 DELIMITER //

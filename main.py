@@ -6,6 +6,7 @@ from database import database, metadata, DATABASE_URL
 from routers.productos import router as productos_router
 from routers.productos_qr import router as productos_qr_router
 from routers.ventas import router as ventas_router
+from routers.estadisticas import router as estadisticas_router
 
 app = FastAPI()
 
@@ -33,6 +34,7 @@ metadata.create_all(engine)
 app.include_router(productos_router, prefix="/productos", tags=["productos"])
 app.include_router(productos_qr_router, prefix="/productos_qr", tags=["productos_qr"])
 app.include_router(ventas_router, prefix="/ventas", tags=["ventas"])
+app.include_router(estadisticas_router, prefix="/estadisticas", tags=["estadisticas"])
 
 @app.on_event("startup")
 async def startup():

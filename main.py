@@ -7,6 +7,7 @@ from routers.productos import router as productos_router
 from routers.productos_qr import router as productos_qr_router
 from routers.ventas import router as ventas_router
 from routers.estadisticas import router as estadisticas_router
+from routers.consulta_ia import router as consulta_ia_router
 
 app = FastAPI()
 
@@ -35,6 +36,7 @@ app.include_router(productos_router, prefix="/productos", tags=["productos"])
 app.include_router(productos_qr_router, prefix="/productos_qr", tags=["productos_qr"])
 app.include_router(ventas_router, prefix="/ventas", tags=["ventas"])
 app.include_router(estadisticas_router, prefix="/estadisticas", tags=["estadisticas"])
+app.include_router(consulta_ia_router, prefix="/consulta_ia", tags=["consulta_ia"])
 
 @app.on_event("startup")
 async def startup():

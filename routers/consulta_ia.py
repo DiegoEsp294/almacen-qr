@@ -22,25 +22,29 @@ class ConsultaIAResponse(BaseModel):
 @router.post("/", response_model=ConsultaIAResponse)
 async def consultar_por_ia(data: ConsultaIARequest):
     try:
-        prompt = f"""Base de datos MySQL con estas tablas principales:
+        prompt = f"""
+    Base de datos MySQL con estas tablas principales:
 
-- productos(id INT PK, codigo VARCHAR, nombre VARCHAR, stock INT, ubicacion VARCHAR, precio DECIMAL, costo DECIMAL)
-- productos_historico(id INT PK, producto_id INT FK a productos.id, nombre VARCHAR, precio DECIMAL, costo DECIMAL, accion ENUM, fecha DATETIME)
-- productos_qr(id INT PK, producto_id INT FK a productos.id, codigo_qr VARCHAR)
-- ubicaciones(id INT PK, nombre VARCHAR)
-- ventas(id INT PK, fecha DATETIME)
-- ventas_detalle(id INT PK, venta_id INT FK a ventas.id, producto_id INT FK a productos.id, cantidad INT, precio_unitario DECIMAL, precio_total DECIMAL)
-- usuarios(id_usuarios INT PK, nombre VARCHAR, apellido VARCHAR, email VARCHAR)
-- roles(id_roles INT PK, nombre VARCHAR)
+    - productos(id INT PK, codigo VARCHAR, nombre VARCHAR, stock INT, ubicacion VARCHAR, precio DECIMAL, costo DECIMAL)
+    - productos_historico(id INT PK, producto_id INT FK a productos.id, nombre VARCHAR, precio DECIMAL, costo DECIMAL, accion ENUM, fecha DATETIME)
+    - productos_qr(id INT PK, producto_id INT FK a productos.id, codigo_qr VARCHAR)
+    - ubicaciones(id INT PK, nombre VARCHAR)
+    - ventas(id INT PK, fecha DATETIME)
+    - ventas_detalle(id INT PK, venta_id INT FK a ventas.id, producto_id INT FK a productos.id, cantidad INT, precio_unitario DECIMAL, precio_total DECIMAL)
+    - usuarios(id_usuarios INT PK, nombre VARCHAR, apellido VARCHAR, email VARCHAR)
+    - roles(id_roles INT PK, nombre VARCHAR)
 
-Relaciones importantes:
-- ventas_detalle.venta_id referencia ventas.id
-- ventas_detalle.producto_id referencia productos.id
-- productos_qr.producto_id referencia productos.id
+    Relaciones importantes:
+    - ventas_detalle.venta_id referencia ventas.id
+    - ventas_detalle.producto_id referencia productos.id
+    - productos_qr.producto_id referencia productos.id
 
-Convertí el siguiente pedido en una consulta SQL válida para MySQL. No expliques nada, solo devolvé la consulta.
+    Tu tarea es:
 
-Pedido: {data.pregunta}"""
+    1. Convertir el siguiente pedido en una consulta SQL válida para MySQL. Solo devolvé la consulta, sin explicaciones.
+
+    Pedido del usuario: {data.pregunta}
+    """
 
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",

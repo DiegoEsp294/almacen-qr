@@ -8,6 +8,7 @@ from routers.productos_qr import router as productos_qr_router
 from routers.ventas import router as ventas_router
 from routers.estadisticas import router as estadisticas_router
 from routers.consulta_ia import router as consulta_ia_router
+from routers.ping import router as ping
 
 app = FastAPI()
 
@@ -32,6 +33,7 @@ engine = create_engine(DATABASE_URL)
 metadata.create_all(engine)
 
 # Tus routers
+app.include_router(ping, prefix="/ping", tags=["ping"])
 app.include_router(productos_router, prefix="/productos", tags=["productos"])
 app.include_router(productos_qr_router, prefix="/productos_qr", tags=["productos_qr"])
 app.include_router(ventas_router, prefix="/ventas", tags=["ventas"])

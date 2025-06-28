@@ -2,10 +2,10 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 import requests
 import os
+import json
 from dotenv import load_dotenv
 
-# Cargar .env
-load_dotenv()
+# Cargar .env\load_dotenv()
 
 router = APIRouter()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -18,6 +18,16 @@ class ConsultaIAResponse(BaseModel):
     resultados: list
     respuesta_usuario: str
     error: str = None
+
+
+def fix_encoding(text: str) -> str:
+    """
+    Corrige posibles mojibakes re-codificando de latin-1 a utf-8.
+    """
+    try:
+        return text.encode('latin-1').decode('utf-8')
+    except Exception:
+        return text
 
 @router.post("/", response_model=ConsultaIAResponse)
 async def consultar_por_ia(data: ConsultaIARequest):
@@ -51,7 +61,7 @@ Pedido del usuario: {data.pregunta}
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
             },
             json={
                 "model": "llama3-70b-8192",
@@ -60,20 +70,21 @@ Pedido del usuario: {data.pregunta}
             },
         )
 
+        # Parse de la respuesta JSON
         json_sql = response_sql.json()
-
         if response_sql.status_code != 200:
-            return {
-                "consulta_sql": "",
-                "resultados": [],
-                "respuesta_usuario": "",
-                "error": f"Groq SQL error: {json_sql.get('error', {}).get('message', 'Desconocido')}"
-            }
+            return ConsultaIAResponse(
+                consulta_sql="",
+                resultados=[],
+                respuesta_usuario="",
+                error=f"Groq SQL error: {json_sql.get('error', {}).get('message', 'Desconocido')}"
+            )
 
-        consulta_sql = json_sql["choices"][0]["message"]["content"].strip()
-
-        if consulta_sql.startswith("```") and consulta_sql.endswith("```"):
-            consulta_sql = "\n".join(consulta_sql.splitlines()[1:-1]).strip()
+        # Extraer y limpiar codificación de la consulta SQL
+        consulta_raw = json_sql["choices"][0]["message"]["content"].strip()
+        if consulta_raw.startswith("```") and consulta_raw.endswith("```"):
+            consulta_raw = "\n".join(consulta_raw.splitlines()[1:-1]).strip()
+        consulta_sql = fix_encoding(consulta_raw)
 
         # Paso 2: ejecutar SQL en la DB
         from database import database
@@ -92,7 +103,7 @@ Respondé como si fueras un asistente de datos. Sé claro, profesional y directo
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
             },
             json={
                 "model": "llama3-70b-8192",
@@ -102,27 +113,28 @@ Respondé como si fueras un asistente de datos. Sé claro, profesional y directo
         )
 
         json_txt = response_txt.json()
-
         if response_txt.status_code != 200:
-            return {
-                "consulta_sql": consulta_sql,
-                "resultados": resultados_list,
-                "respuesta_usuario": "",
-                "error": f"Groq respuesta error: {json_txt.get('error', {}).get('message', 'Desconocido')}"
-            }
+            return ConsultaIAResponse(
+                consulta_sql=consulta_sql,
+                resultados=resultados_list,
+                respuesta_usuario="",
+                error=f"Groq respuesta error: {json_txt.get('error', {}).get('message', 'Desconocido')}"
+            )
 
-        respuesta_usuario = json_txt["choices"][0]["message"]["content"].strip()
+        # Extraer y limpiar codificación de la respuesta
+        respuesta_raw = json_txt["choices"][0]["message"]["content"].strip()
+        respuesta_usuario = fix_encoding(respuesta_raw)
 
-        return {
-            "consulta_sql": consulta_sql,
-            "resultados": resultados_list,
-            "respuesta_usuario": respuesta_usuario,
-        }
+        return ConsultaIAResponse(
+            consulta_sql=consulta_sql,
+            resultados=resultados_list,
+            respuesta_usuario=respuesta_usuario,
+        )
 
     except Exception as e:
-        return {
-            "consulta_sql": "",
-            "resultados": [],
-            "respuesta_usuario": "",
-            "error": str(e),
-        }
+        return ConsultaIAResponse(
+            consulta_sql="",
+            resultados=[],
+            respuesta_usuario="",
+            error=str(e),
+        )

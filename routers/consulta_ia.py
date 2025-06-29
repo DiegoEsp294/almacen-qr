@@ -1,14 +1,16 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-import requests
 import os
 import json
+import openai
 from dotenv import load_dotenv
 
 # Cargar .env\load_dotenv()
 
 router = APIRouter()
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+# Usar la clave de OpenAI para ChatGPT
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = OPENAI_API_KEY
 
 class ConsultaIARequest(BaseModel):
     pregunta: str
@@ -32,7 +34,7 @@ def fix_encoding(text: str) -> str:
 @router.post("/", response_model=ConsultaIAResponse)
 async def consultar_por_ia(data: ConsultaIARequest):
     try:
-        # Paso 1: generar SQL
+        # Paso 1: generar SQL con ChatGPT
         prompt_sql = f"""
 Base de datos MySQL con estas tablas principales:
 
@@ -54,34 +56,17 @@ Tu tarea es:
 
 1. Convertir el siguiente pedido en una consulta SQL válida para MySQL. Solo devolvé la consulta, sin explicaciones.
 
+Además cuando te consulten por fechas, comparalo por la fecha pero sin tener en cuenta la hora, es decir, solo la fecha.
+
 Pedido del usuario: {data.pregunta}
 """
-
-        response_sql = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            json={
-                "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": prompt_sql}],
-                "temperature": 0,
-            },
+        response_sql = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt_sql}],
+            temperature=0
         )
-
-        # Parse de la respuesta JSON
-        json_sql = response_sql.json()
-        if response_sql.status_code != 200:
-            return ConsultaIAResponse(
-                consulta_sql="",
-                resultados=[],
-                respuesta_usuario="",
-                error=f"Groq SQL error: {json_sql.get('error', {}).get('message', 'Desconocido')}"
-            )
-
-        # Extraer y limpiar codificación de la consulta SQL
-        consulta_raw = json_sql["choices"][0]["message"]["content"].strip()
+        # Extraer consulta SQL
+        consulta_raw = response_sql.choices[0].message.content.strip()
         if consulta_raw.startswith("```") and consulta_raw.endswith("```"):
             consulta_raw = "\n".join(consulta_raw.splitlines()[1:-1]).strip()
         consulta_sql = fix_encoding(consulta_raw)
@@ -91,38 +76,19 @@ Pedido del usuario: {data.pregunta}
         resultados = await database.fetch_all(consulta_sql)
         resultados_list = [dict(r) for r in resultados]
 
-        # Paso 3: generar respuesta natural
+        # Paso 3: generar respuesta natural con ChatGPT
         prompt_respuesta = f"""
 Pedido del usuario: {data.pregunta}
 Resultado de la consulta (formato lista de diccionarios): {resultados_list}
 
 Respondé como si fueras un asistente de datos. Sé claro, profesional y directo. No muestres código ni SQL.
 """
-
-        response_txt = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json; charset=utf-8",
-            },
-            json={
-                "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": prompt_respuesta}],
-                "temperature": 0.3,
-            },
+        response_txt = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt_respuesta}],
+            temperature=0.3
         )
-
-        json_txt = response_txt.json()
-        if response_txt.status_code != 200:
-            return ConsultaIAResponse(
-                consulta_sql=consulta_sql,
-                resultados=resultados_list,
-                respuesta_usuario="",
-                error=f"Groq respuesta error: {json_txt.get('error', {}).get('message', 'Desconocido')}"
-            )
-
-        # Extraer y limpiar codificación de la respuesta
-        respuesta_raw = json_txt["choices"][0]["message"]["content"].strip()
+        respuesta_raw = response_txt.choices[0].message.content.strip()
         respuesta_usuario = fix_encoding(respuesta_raw)
 
         return ConsultaIAResponse(

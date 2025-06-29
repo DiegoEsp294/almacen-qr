@@ -4,3 +4,4 @@ sqlalchemy
 databases
 aiomysql
 requests
+openai

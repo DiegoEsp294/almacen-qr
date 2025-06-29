@@ -9,6 +9,8 @@ from routers.ventas import router as ventas_router
 from routers.estadisticas import router as estadisticas_router
 from routers.consulta_ia import router as consulta_ia_router
 from routers.ping import router as ping
+from routers.marca_agua import router as marca_agua_router
+
 
 app = FastAPI()
 
@@ -39,6 +41,7 @@ app.include_router(productos_qr_router, prefix="/productos_qr", tags=["productos
 app.include_router(ventas_router, prefix="/ventas", tags=["ventas"])
 app.include_router(estadisticas_router, prefix="/estadisticas", tags=["estadisticas"])
 app.include_router(consulta_ia_router, prefix="/consulta_ia", tags=["consulta_ia"])
+app.include_router(marca_agua_router, prefix="/marca_agua", tags=["marca_agua"])
 
 @app.on_event("startup")
 async def startup():

@@ -61,7 +61,7 @@ Además cuando te consulten por fechas, comparalo por la fecha pero sin tener en
 Pedido del usuario: {data.pregunta}
 """
         response_sql = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt_sql}],
             temperature=0
         )
@@ -84,7 +84,7 @@ Resultado de la consulta (formato lista de diccionarios): {resultados_list}
 Respondé como si fueras un asistente de datos. Sé claro, profesional y directo. No muestres código ni SQL.
 """
         response_txt = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt_respuesta}],
             temperature=0.3
         )

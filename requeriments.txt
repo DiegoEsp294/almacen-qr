@@ -4,4 +4,4 @@ sqlalchemy
 databases
 aiomysql
 requests
-openai
+openai==0.28

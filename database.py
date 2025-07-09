@@ -18,6 +18,7 @@ productos = Table(
     Column("creado_en", TIMESTAMP),
     Column("precio", Numeric(10, 2)),
     Column("costo", Numeric(10, 2)),
+    Column("imagen", String),
 )
 
 productos_qr = Table(

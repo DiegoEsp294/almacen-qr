@@ -19,11 +19,12 @@ def agregar_marca_agua(imagen_base64: str, watermark_path: str) -> str:
         # Cargar marca de agua y ajustar su opacidad
         marca = Image.open(watermark_path).convert("RGBA")
         alpha = marca.getchannel("A")
-        alpha = ImageEnhance.Brightness(alpha).enhance(0.2)  # 20% opacidad
+        alpha = ImageEnhance.Brightness(alpha).enhance(0.5)  # 50% opacidad
         marca.putalpha(alpha)
 
         # Redimensionar si es necesario
-        marca = marca.resize((int(imagen.width * 0.3), int(imagen.height * 0.3)))
+        nuevo_lado = int(imagen.width * 0.4)
+        marca = marca.resize((nuevo_lado, nuevo_lado))
 
         # Posición inferior derecha
         pos = (imagen.width - marca.width - 10, imagen.height - marca.height - 10)

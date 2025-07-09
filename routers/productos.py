@@ -34,7 +34,7 @@ def convertir_producto(fila) -> dict:
         "creado_en": fila["creado_en"].isoformat() if fila["creado_en"] else "",
         "precio": float(fila["precio"]) if fila["precio"] is not None else 0.0,
         "costo": float(fila["costo"]) if fila["costo"] is not None else 0.0,
-        "imagen": fila.get("imagen") or "",
+        "imagen": fila["imagen"] if "imagen" in fila.keys() else "",
     }
 
 @router.get("/", response_model=List[Producto])

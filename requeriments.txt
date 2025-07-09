@@ -6,3 +6,4 @@ aiomysql
 requests
 openai==0.28
 Pillow
+python-multipart

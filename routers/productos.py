@@ -5,6 +5,7 @@ from database import database, productos
 from fastapi import UploadFile, Form
 import os
 import shutil
+import re
 
 router = APIRouter()
 
@@ -54,6 +55,14 @@ async def obtener_producto(producto_id: int):
 
 from fastapi import UploadFile, Form
 
+from fastapi import APIRouter, HTTPException, status, UploadFile, Form
+from database import database, productos
+import os
+import shutil
+import re
+
+router = APIRouter()
+
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Producto)
 async def crear_producto(
     codigo: str = Form(...),
@@ -62,21 +71,29 @@ async def crear_producto(
     ubicacion: str = Form(...),
     precio: float = Form(...),
     costo: float = Form(...),
-    file: UploadFile = Form(None)  # ← Opcional
+    file: UploadFile = Form(None)
 ):
     print("Producto recibido:", codigo, nombre, stock, ubicacion, precio, costo)
 
-    # Guardar la imagen si viene
     imagen_path = None
     if file:
-        folder = "static/images"
-        os.makedirs(folder, exist_ok=True)
-        file_location = f"{folder}/{file.filename}"
+        # 📁 Ruta donde se guardan las imágenes
+        UPLOAD_FOLDER = "static/images"
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # ✔️ Crea el folder si no existe
+
+        # Limpia el nombre del archivo (quita caracteres raros y espacios)
+        filename_clean = re.sub(r'[^a-zA-Z0-9_.-]', '-', file.filename)
+
+        file_location = os.path.join(UPLOAD_FOLDER, filename_clean)
+
+        # Guarda físicamente la imagen
         with open(file_location, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        imagen_path = f"/static/images/{file.filename}"
 
-    # Guardar el producto en la base de datos
+        # Guarda la ruta relativa para después usarla en la web
+        imagen_path = f"/static/images/{filename_clean}"
+
+    # Guarda el producto en la base de datos
     query = productos.insert().values(
         codigo=codigo,
         nombre=nombre,
@@ -84,10 +101,11 @@ async def crear_producto(
         ubicacion=ubicacion,
         precio=precio,
         costo=costo,
-        imagen=imagen_path  # Guardás la ruta o None
+        imagen=imagen_path
     )
     nuevo_id = await database.execute(query)
 
+    # Trae el producto recién creado
     query_select = productos.select().where(productos.c.id == nuevo_id)
     fila = await database.fetch_one(query_select)
 

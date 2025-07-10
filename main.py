@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine
 
 from database import database, metadata, DATABASE_URL
@@ -11,7 +12,6 @@ from routers.consulta_ia import router as consulta_ia_router
 from routers.ping import router as ping
 from routers.marca_agua import router as marca_agua_router
 
-
 app = FastAPI()
 
 # ⚠️ Configuración de CORS
@@ -21,18 +21,20 @@ origins = [
     "http://127.0.0.1:8000",
     "https://almacen-qr.onrender.com",
     "https://landingbabychic.onrender.com",
-
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Podés reemplazarlo por origins si querés limitarlo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Esto crea las tablas en la DB si no existen
+# ✅ Monta la carpeta static
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Crea las tablas si no existen
 engine = create_engine(DATABASE_URL)
 metadata.create_all(engine)
 

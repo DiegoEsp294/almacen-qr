@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from database import database, productos
 from fastapi import UploadFile, Form
 import os
@@ -16,7 +16,8 @@ class ProductoBase(BaseModel):
     ubicacion: str
     precio: float
     costo: float
-    imagen: str | None = None
+    imagen: Optional[str] = None
+
 
 class Producto(ProductoBase):
     id: int
@@ -53,15 +54,6 @@ async def obtener_producto(producto_id: int):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return convertir_producto(fila)
 
-from fastapi import UploadFile, Form
-
-from fastapi import APIRouter, HTTPException, status, UploadFile, Form
-from database import database, productos
-import os
-import shutil
-import re
-
-router = APIRouter()
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Producto)
 async def crear_producto(

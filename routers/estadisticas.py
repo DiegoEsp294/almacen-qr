@@ -4,6 +4,7 @@ from typing import List, Optional
 from database import database, ventas, ventas_detalle, productos
 from datetime import datetime, timedelta
 from sqlalchemy import func, select, desc
+from datetime import date
 
 router = APIRouter()
 
@@ -12,10 +13,10 @@ class ProductoMasVendido(BaseModel):
     nombre: str
     cantidad: int
 
-class ProductoSinMovimiento(BaseModel):
+class ProductoHistoricoVentas(BaseModel):
     id: int
     nombre: str
-    dias_sin_venta: Optional[int]
+    fecha_venta: date
 
 class Estadisticas(BaseModel):
     total_ventas_hoy: float
@@ -23,7 +24,7 @@ class Estadisticas(BaseModel):
     total_ventas_ultimo_mes: float
     promedio_venta_diaria_ultima_semana: float
     producto_mas_vendido: Optional[ProductoMasVendido]
-    productos_sin_movimiento: List[ProductoSinMovimiento]
+    historico_ventas: List[ProductoHistoricoVentas]
 
 @router.get("/", response_model=Estadisticas)
 async def obtener_estadisticas():
@@ -72,24 +73,26 @@ async def obtener_estadisticas():
     else:
         producto_mas_vendido = None
 
-    # Productos sin movimiento
-    query_sin_movimiento = """
-        SELECT p.id, p.nombre, MAX(v.fecha) as ultima_venta
-        FROM productos p
-        LEFT JOIN ventas_detalle vd ON p.id = vd.producto_id
-        LEFT JOIN ventas v ON v.id = vd.venta_id
-        GROUP BY p.id
-        HAVING ultima_venta IS NULL OR ultima_venta < :fecha
+    # Productos historico ventas
+    query_historico_ventas = """
+        SELECT 
+            p.id AS id,
+            p.nombre AS nombre,
+            v.fecha AS fecha_venta
+        FROM ventas v
+        JOIN ventas_detalle vd ON v.id = vd.venta_id
+        JOIN productos p ON p.id = vd.producto_id
+        WHERE v.fecha >= :fecha
+        ORDER BY v.fecha DESC
     """
-    resultados = await database.fetch_all(query_sin_movimiento, {"fecha": str(mes_atras)})
+    resultados = await database.fetch_all(query_historico_ventas, {"fecha": mes_atras})
 
-    productos_sin_mov = []
+    productos_historico_ventas = []
     for fila in resultados:
-        dias = (hoy - fila["ultima_venta"].date()).days if fila["ultima_venta"] else None
-        productos_sin_mov.append({
+        productos_historico_ventas.append({
             "id": fila["id"],
             "nombre": fila["nombre"],
-            "dias_sin_venta": dias
+            "fecha_venta": fila["fecha_venta"]
         })
 
     return {
@@ -98,5 +101,5 @@ async def obtener_estadisticas():
         "total_ventas_ultimo_mes": total_mes,
         "promedio_venta_diaria_ultima_semana": round(total_semana / 7, 2),
         "producto_mas_vendido": producto_mas_vendido,
-        "productos_sin_movimiento": productos_sin_mov
+        "historico_ventas": productos_historico_ventas
     }

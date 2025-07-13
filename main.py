@@ -35,8 +35,8 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Crea las tablas si no existen
-engine = create_engine(DATABASE_URL)
-metadata.create_all(engine)
+# engine = create_engine(DATABASE_URL)
+# metadata.create_all(engine)
 
 # Tus routers
 app.include_router(ping, prefix="/ping", tags=["ping"])
@@ -55,3 +55,8 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await database.disconnect()
+
+
+@app.get("/")
+def root():
+    return {"message": "API almacen-qr funcionando correctamente"}

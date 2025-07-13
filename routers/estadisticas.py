@@ -92,7 +92,7 @@ async def obtener_estadisticas():
         productos_historico_ventas.append({
             "id": fila["id"],
             "nombre": fila["nombre"],
-            "fecha_venta": fila["fecha_venta"]
+            "fecha_venta": fila["fecha_venta"].date()
         })
 
     return {
